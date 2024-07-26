@@ -1,4 +1,5 @@
-#include <provisionalCred.h>
+#include "provisionalCred.h"
+#include "rvmConfig.h"
 
 #include <WiFi.h>
 #include <MQTT.h>
@@ -18,6 +19,8 @@ int connectToWiFi(const char* ssid, const char* pass);
 int authenticate(const char* rvmid, const char* rvmKey, const char* url);
 
 void setup(){
+  delay(10000);
+
   Serial.begin(115200);
   Serial2.begin(115200);
 
@@ -26,9 +29,11 @@ void setup(){
   messageExchange.setSignature("MessageExchange");
 
   int connectWifi = connectToWiFi(wifiCred.ssid, wifiCred.pass);
-  // if (connectWifi != 0){
-  //   authenticate();
-  // }
+  if (connectWifi == 1){
+    char apiURL[100];
+    rvmConfig.getAPIUrl(apiURL);
+    authenticate(rvmCred.rvmid, rvmCred.secretKey, apiURL);
+  }
 }
 
 void loop(){
@@ -66,7 +71,11 @@ int connectToWiFi(const char* ssid, const char* pass){
 }
 
 int authenticate(const char* rvmid, const char* rvmKey, const char* url){
-  Serial.print("[HTTP Auth Init] Authenticating...");
+  Serial.println("\n[HTTP Auth Init] Authenticating...");
+  Serial.printf("RVM ID: %s\n", rvmid);
+  Serial.printf("RVM key: %s\n", rvmKey);
+  Serial.printf("API URL: %s\n", url);
+
   HTTPClient httpClient;
   
   httpClient.begin(String(url));
@@ -93,7 +102,7 @@ int authenticate(const char* rvmid, const char* rvmKey, const char* url){
     Serial.print("\n[HTTP Auth Init] Succesfully authenticated ");
     Serial.printf("with response code %d", resCode);
     String response = httpClient.getString();
-    Serial.print("[HTTP Auth Init] Auth Response:");
+    Serial.print("\n[HTTP Auth Init] Auth Response: ");
     Serial.println(response);
   }
   else if (resCode >= 400 && resCode < 500){
