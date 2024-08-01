@@ -130,6 +130,11 @@ int connectToMQTT(const char *hostname, const char *id, const char *username, co
         if (mqttClient.connect(id, username, jwt))
         {
             Serial.println("\n[MQTT Init] Connected to MQTT Broker");
+            
+            char topic[30];
+            snprintf(topic, 30, "/rvm/%s/command", id);
+            mqttClient.subscribe(topic);
+            
             return 1;
         }
         else
