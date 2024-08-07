@@ -38,7 +38,7 @@ int mqttInit(const char *hostname, const char *id, const char *username, const c
             Serial.println("\n[MQTT Init] Connected to MQTT Broker");
 
             char topic[30];
-            snprintf(topic, 30, "/rvm/%s/command", id);
+            snprintf(topic, 30, "gocircular/rvm/%s/command", id);
             mqttClient.subscribe(topic);
 
             return 1;
@@ -52,8 +52,4 @@ int mqttInit(const char *hostname, const char *id, const char *username, const c
 
     Serial.println("\n[MQTT Init] Failed to connect to MQTT Broker");
     return 0;
-}
-
-int sendMessageExchangeData(int topic, int data[]){
-
 }

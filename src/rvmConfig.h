@@ -12,10 +12,14 @@ struct RVMConfig{
     const char* mqttprefix = "mqtt";
     const char* apiEndpoint = "/api/rvm/auth";
 
+    const char* mqttTopicPrefix = "gocircular/rvm";
+    char mqttTopicHead[50];
+
     const int maxSize = 100;
 
     void getAPIUrl(char apiurl[]);
     void getMQTTUrl(char mqtturl[]);
+    void setMQTTTopicHead();
 };
 
 extern RVMConfig rvmConfig;

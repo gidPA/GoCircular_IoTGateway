@@ -1,4 +1,5 @@
 #include "rvmConfig.h"
+#include "rvmCred.h"
 
 RVMConfig rvmConfig;
 
@@ -14,4 +15,9 @@ void RVMConfig::getMQTTUrl(char mqtturl[]){
 
     snprintf(buffer, maxSize, "%s://%s", mqttprefix, hostname);
     strncpy(mqtturl, buffer, maxSize);
+}
+
+void RVMConfig::setMQTTTopicHead(){
+    snprintf(mqttTopicHead, 50, "%s/%s", mqttTopicPrefix, rvmCred.rvmid);
+    Serial.println(mqttTopicHead);
 }

@@ -13,6 +13,7 @@ struct TransactionState
 {
     bool isBusy = true;
     bool isMemberMode = false;
+    int memberID = 0;
 
     byte items[20][3];
     int currentPoints = 0;
@@ -20,11 +21,16 @@ struct TransactionState
 
     char jsonMessageBuffer[MAX_TRANSACTION_JSON_BUFFER_SIZE];
 
+    void setTransactionAsMemberMode(int memberID);
+
+    void finalizeTransaction();
     void resetTransaction();
 
     void appendNewItem(byte enteredItem[], byte itemDataLength);
     
     void createTotalJsonMessage();
+
+
     void previewTotalJsonMessage();
 };
 

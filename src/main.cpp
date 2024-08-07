@@ -22,6 +22,7 @@ MessageExchange messageExchange;
 unsigned long lastMillis = 0;
 
 void handleIncomingMessage();
+void createPendingRecyclableJson(byte recyclableData[], char messageBuffer[]);
 void createRecyclableJson(byte recyclableData[], char messageBuffer[]);
 
 void setup()
@@ -33,6 +34,8 @@ void setup()
   delay(2000);
 
   int err = 1;
+
+  rvmConfig.setMQTTTopicHead();
 
   messageExchange.setUartDevice(&Serial2);
   messageExchange.setUartMonitoringDevice(&Serial);
@@ -68,10 +71,18 @@ void setup()
 
 void loop()
 {
+  if(!mqttClient.connected()){
+    mqttInit(rvmConfig.hostname, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt);
+  }
+
+  mqttClient.loop();
+
   if (messageExchange.checkMessageEntry())
   {
     handleIncomingMessage();
   }
+
+
 }
 
 void handleIncomingMessage()
@@ -80,6 +91,12 @@ void handleIncomingMessage()
 
   switch (messageTopic)
   {
+    case BEGIN_TRANSACTION:{
+      Serial.println("[BEGIN_TRANSACTION MESSAGE HANDLER] New Transaction Initiated");
+      transactionState.isBusy = true;
+
+      break;
+    }
     case ITEM_ENTRY:
     {
 
@@ -95,9 +112,25 @@ void handleIncomingMessage()
         data[0] = messageExchange.getItemType();
         data[1] = messageExchange.getItemSize();
 
-        char messageBuffer[15];
-        createRecyclableJson(data, messageBuffer);
+        //Serial.printf("Data value: %s, %s", data[0], data[1]);
+
+        char messageBuffer[100];
+        createPendingRecyclableJson(data, messageBuffer);
         Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Created JSON: %s\n\n", messageBuffer);
+        
+        char pendingItemTopic[50];
+        snprintf(pendingItemTopic, 50, "%s/transaction/pendingItem", rvmConfig.mqttTopicHead);
+        
+        for (int i = 0; i < 3; i++){
+          bool success = mqttClient.publish(pendingItemTopic, messageBuffer);
+          if (success){
+            Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Successfully Reported");
+            break;
+          } else{
+            Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Failed to report");
+          }
+        }
+        
       }
 
       else if (entryStatus == ACCEPTED)
@@ -107,10 +140,37 @@ void handleIncomingMessage()
         data[0] = messageExchange.getItemType();
         data[1] = messageExchange.getItemSize();
         data[2] = messageExchange.getItemPoint();
+        
+        char messageBuffer[100];
+        createRecyclableJson(data, messageBuffer);
+        Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Created JSON: %s\n\n", messageBuffer);
+        
+        char enteredItemTopic[50];
+        snprintf(enteredItemTopic, 50, "%s/transaction/enteredItem", rvmConfig.mqttTopicHead);
+        
+        for (int i = 0; i < 3; i++){
+          bool success = mqttClient.publish(enteredItemTopic, messageBuffer);
+          if (success){
+            Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Successfully Reported");
+            break;
+          } else{
+            Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Failed to report");
+          }
+        }
 
         transactionState.appendNewItem(data, 3);
+
         transactionState.previewTotalJsonMessage();
       }
+
+      break;
+    }
+
+    case TRANSACTION_COMPLETE:{
+      //messageExchange.previewMessage();
+      Serial.println("[TRANSACTION_COMPLETE MESSAGE HANDLER] Current transaction completed");
+      transactionState.finalizeTransaction();
+      break;
     }
 
     default:
@@ -122,19 +182,39 @@ void handleIncomingMessage()
   }
 }
 
-void createRecyclableJson(byte recyclableData[], char messageBuffer[])
+void createPendingRecyclableJson(byte recyclableData[], char messageBuffer[])
 {
+  Serial.println("Creating JSON....");
   JsonDocument doc;
 
-  JsonArray data = doc["data"].to<JsonArray>();
+  JsonArray data = doc["pendingItem"].to<JsonArray>();
   data.add(recyclableData[0]);
   data.add(recyclableData[1]);
 
-  char output[15];
+  char output[100];
 
   doc.shrinkToFit(); // optional
 
   serializeJson(doc, output);
 
-  memcpy(messageBuffer, output, 15);
+  memcpy(messageBuffer, output, 100);
+}
+
+void createRecyclableJson(byte recyclableData[], char messageBuffer[])
+{
+  Serial.println("Creating JSON....");
+  JsonDocument doc;
+
+  JsonArray data = doc["pendingItem"].to<JsonArray>();
+  data.add(recyclableData[0]);
+  data.add(recyclableData[1]);
+  data.add(recyclableData[2]);
+
+  char output[100];
+
+  doc.shrinkToFit(); // optional
+
+  serializeJson(doc, output);
+
+  strncpy(messageBuffer, output, 100);
 }
