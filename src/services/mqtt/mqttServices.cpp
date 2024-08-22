@@ -1,20 +1,19 @@
-#include <PubSubClient.h>
+
 #include <Arduino.h>
+#include <PubSubClient.h>
 #include "services/wifi/WiFiServices.h"
+#include "models/TransactionState.h"
+#include "rvmConfig.h"
 
 PubSubClient mqttClient(net);
 
-void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i=0;i<length;i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-}
-
-int mqttInit(const char *hostname, const char *id, const char *username, const char *jwt)
+int mqttInit(
+             const char *hostname,
+             const char *id,
+             const char *username,
+             const char *jwt,
+             MQTT_CALLBACK_SIGNATURE
+            )
 {
     Serial.print("\n[MQTT Init] Connecting to MQTT Broker...\n");
     Serial.printf("[MQTT Init] Client ID: %s\n", id);
@@ -36,10 +35,14 @@ int mqttInit(const char *hostname, const char *id, const char *username, const c
         if (mqttClient.connect(id, username, jwt))
         {
             Serial.println("\n[MQTT Init] Connected to MQTT Broker");
+            
+            // mqttClient.subscribe(rvmConfig.setExchangeRateTopic);
+            // mqttClient.subscribe(rvmConfig.setMemberModeTopic);
 
-            char topic[30];
-            snprintf(topic, 30, "gocircular/rvm/%s/command", id);
-            mqttClient.subscribe(topic);
+            mqttClient.subscribe("gocircular/rvm/4002/input/transaction/memberMode");
+            Serial.println("[MQTT Init]Succesfully subscribed");
+
+            mqttClient.setCallback(callback);
 
             return 1;
         }

@@ -1,13 +1,34 @@
 #include "rvmConfig.h"
 #include "rvmCred.h"
+#include <Arduino.h>
 
 RVMConfig rvmConfig;
 
-void RVMConfig::getAPIUrl(char apiurl[]){
-    char buffer[maxSize];
+void RVMConfig::initiate() {
 
-    snprintf(buffer, maxSize, "%s://%s:%s%s", httpprefix, hostname, httpPort, apiEndpoint);
-    strncpy(apiurl, buffer, maxSize);
+    snprintf(itemPendingTopic, sizeof(itemPendingTopic), "%s/%s/%s", mqttTopicPrefix, id, itemPendingSubtopic);
+    snprintf(itemEntryTopic, sizeof(itemEntryTopic), "%s/%s/%s", mqttTopicPrefix, id, itemEntrySubtopic);
+    snprintf(transactionReportTopic, sizeof(transactionReportTopic), "%s/%s/%s", mqttTopicPrefix, id, transactionReportSubtopic);
+    snprintf(binFullAlertTopic, sizeof(binFullAlertTopic), "%s/%s/%s", mqttTopicPrefix, id, binFullAlertSubtopic);
+    snprintf(coinEmptyTopic, sizeof(coinEmptyTopic), "%s/%s/%s", mqttTopicPrefix, id, coinEmptySubtopic);
+    
+    snprintf(setMemberModeResponseTopic, sizeof(setMemberModeResponseTopic), "%s/%s/%s", mqttTopicPrefix, id, setMemberModeResponseSubtopic);
+    snprintf(setMemberModeTopic, sizeof(setMemberModeTopic), "%s/%s/%s", mqttTopicPrefix, id, setMemberModeSubtopic);
+    snprintf(setExchangeRateTopic, sizeof(setExchangeRateTopic), "%s/%s/%s", mqttTopicPrefix, id, setExchangeRateSubtopic);
+
+    snprintf(httpAuthURL, sizeof(httpAuthURL), "http://%s:%s/api/rvm/auth", hostname, httpPort);
+
+
+    Serial.println("");
+    Serial.printf("[RVMConfig] itemPendingTopic: %s\n", itemPendingTopic);
+    Serial.printf("[RVMConfig] itemEntryTopic: %s\n", itemEntryTopic);
+    Serial.printf("[RVMConfig] transactionReportTopic: %s\n", transactionReportTopic);
+    Serial.printf("[RVMConfig] binFullAlertTopic: %s\n", binFullAlertTopic);
+    Serial.printf("[RVMConfig] coinEmptyTopic: %s\n", coinEmptyTopic);
+    Serial.printf("[RVMConfig] setMemberModeTopic: %s\n", setMemberModeTopic);
+    Serial.printf("[RVMConfig] setMemberModeResponseTopic: %s\n", setMemberModeResponseTopic);
+    Serial.printf("[RVMConfig] setExchangeRateTopic: %s\n", setExchangeRateTopic);
+    Serial.printf("[RVMConfig] HTTP Authentication URL: %s\n", httpAuthURL);
 }
 
 void RVMConfig::getMQTTUrl(char mqtturl[]){
@@ -15,9 +36,4 @@ void RVMConfig::getMQTTUrl(char mqtturl[]){
 
     snprintf(buffer, maxSize, "%s://%s", mqttprefix, hostname);
     strncpy(mqtturl, buffer, maxSize);
-}
-
-void RVMConfig::setMQTTTopicHead(){
-    snprintf(mqttTopicHead, 50, "%s/%s", mqttTopicPrefix, rvmCred.rvmid);
-    Serial.println(mqttTopicHead);
 }

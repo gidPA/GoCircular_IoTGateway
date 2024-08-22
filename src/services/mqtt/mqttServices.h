@@ -9,6 +9,6 @@ extern PubSubClient mqttClient;
 
 
 void mqttCallback(char* topic, byte* payload, unsigned int length);
-int mqttInit(const char *hostname, const char *id, const char *username, const char *jwt);
+int mqttInit(const char *hostname, const char *id, const char *username, const char *jwt, MQTT_CALLBACK_SIGNATURE);
 
 #endif //MQTT_SERVICES_H

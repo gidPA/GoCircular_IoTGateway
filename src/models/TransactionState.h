@@ -5,7 +5,7 @@
 #include <string.h>
 #include <ArduinoJson.h>
 
-#define MAX_TRANSACTION_JSON_BUFFER_SIZE 1000
+#define MAX_TRANSACTION_JSON_BUFFER_SIZE 1024
 
 
 
@@ -13,7 +13,7 @@ struct TransactionState
 {
     bool isBusy = true;
     bool isMemberMode = false;
-    int memberID = 0;
+    char memberID[15] = "1000";
 
     byte items[20][3];
     int currentPoints = 0;
@@ -21,7 +21,7 @@ struct TransactionState
 
     char jsonMessageBuffer[MAX_TRANSACTION_JSON_BUFFER_SIZE];
 
-    void setTransactionAsMemberMode(int memberID);
+    void setTransactionAsMemberMode(char* memberID);
 
     void finalizeTransaction();
     void resetTransaction();

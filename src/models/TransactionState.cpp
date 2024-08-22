@@ -1,11 +1,19 @@
 #include "TransactionState.h"
 #include "services/mqtt/mqttServices.h"
 #include "rvmConfig.h"
+#include "services/message/messageExchangeObj.h"
 
-void TransactionState::setTransactionAsMemberMode(int memberID){
+
+void TransactionState::setTransactionAsMemberMode(char* memberID){
     if(!isBusy){
-        this->memberID = memberID;
+        this->isMemberMode = true;
+        strncpy(this->memberID, memberID, 15);
     }
+    else{
+        mqttClient.publish(rvmConfig.setMemberModeResponseTopic, "-2");
+    }
+
+    
 }
 
 
@@ -34,11 +42,9 @@ void TransactionState::appendNewItem(byte enteredItem[], byte itemDataLength)
 void TransactionState::finalizeTransaction(){
     Serial.println("[TRANSACTION_STATE] Finalizing Transaction....");
     createTotalJsonMessage();
-    char topic[50];
-    snprintf(topic, 50, "%s/transaction/report", rvmConfig.mqttTopicHead);
 
     for(int i = 0; i < 3; i++){
-        bool isSuccesful = mqttClient.publish(topic, jsonMessageBuffer);
+        bool isSuccesful = mqttClient.publish(rvmConfig.transactionReportTopic, jsonMessageBuffer);
         if(isSuccesful){
             Serial.println("[TRANSACTION_STATE] Transaction successful!");
             break;
@@ -55,8 +61,9 @@ void TransactionState::createTotalJsonMessage()
 {
     JsonDocument doc;
 
-    doc["isMemberMode"] = isMemberMode;
+    doc["isSuccessful"] = true;
     doc["userID"] = memberID;
+    doc["rvmID"] = rvmConfig.id;
     doc["totalPoints"] = currentPoints;
 
     JsonArray recyclableData = doc["recyclableItems"].to<JsonArray>();
