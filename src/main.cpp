@@ -36,6 +36,7 @@ void printHeapInfo()
 void handleIncomingMessage();
 void createPendingRecyclableJson(byte recyclableData[], char messageBuffer[]);
 void createRecyclableJson(byte recyclableData[], char messageBuffer[]);
+void haltFirmware(const char* haltMessage);
 
 void mqttCallback(char *topic, byte *payload, unsigned int length);
 
@@ -71,11 +72,28 @@ void setup()
       break;
     case 2:
       err = mqttInit(rvmConfig.hostname, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
+      break;
     }
 
     if (err <= 0)
     {
       Serial.printf("\n[RVM Init] Step %d has failed. Init stage aborted\n", i);
+      switch(i){
+        case 0:{
+          haltFirmware("Failed to connect to WiFi Network");
+          break;
+        }
+        case 1:{
+          haltFirmware("Failed to authenticate to HTTP Server");
+          break;
+        }
+        case 2:{
+          haltFirmware("Failed to connect to MQTT Server");
+          break;
+        }
+      }
+
+
     }
   }
 
@@ -305,4 +323,13 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
       mqttClient.publish(rvmConfig.setMemberModeResponseTopic, "120");
     }
   }
+}
+
+void haltFirmware(const char* haltMessage){
+  while(1){
+    Serial.print("[GLOBAL] OPERATION HALTED! REASON: ");
+    Serial.printf(haltMessage);
+    delay(2000);
+  }
+
 }
