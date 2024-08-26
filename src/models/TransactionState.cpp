@@ -2,6 +2,7 @@
 #include "services/mqtt/mqttServices.h"
 #include "rvmConfig.h"
 #include "services/message/messageExchangeObj.h"
+#include "services/time/timeHandler.h"
 
 
 void TransactionState::setTransactionAsMemberMode(char* memberID){
@@ -12,13 +13,12 @@ void TransactionState::setTransactionAsMemberMode(char* memberID){
     else{
         mqttClient.publish(rvmConfig.setMemberModeResponseTopic, "-2");
     }
-
-    
 }
 
 
 void TransactionState::resetTransaction()
 {
+    
     isBusy = true;
     isMemberMode = false;
     currentPoints = 0;
@@ -61,7 +61,12 @@ void TransactionState::createTotalJsonMessage()
 {
     JsonDocument doc;
 
+    char timeStringBuffer[30];
+    createSQLTimestamp(&timeObj, timeStringBuffer, sizeof(timeStringBuffer));
+
+    
     doc["isSuccessful"] = true;
+    doc["transactionDate"] = timeStringBuffer;
     doc["userID"] = memberID;
     doc["rvmID"] = rvmConfig.id;
     doc["totalPoints"] = currentPoints;
@@ -85,6 +90,13 @@ void TransactionState::previewTotalJsonMessage()
 {
     createTotalJsonMessage();
     Serial.printf("[TRANSACTION_STATE] JSON message Preview: \n%s\n[TRANSACTION_STATE] End of Preview\n",jsonMessageBuffer);
+}
+
+void TransactionState::initializeTransaction(){
+    getCurrentTimeObject(&timeObj);
+    this->isBusy = true;
+    Serial.print("[TRANSACTION_STATE] New transaction iniitialized on:");
+    Serial.println(&timeObj, "%Y-%m-%d %H:%M:%S");
 }
 
 TransactionState transactionState;

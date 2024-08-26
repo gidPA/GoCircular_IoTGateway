@@ -1,6 +1,8 @@
 
 
 #include <WiFi.h>
+#include <time.h>
+#include <services/time/timeHandler.h>
 // #include <MQTT.h>
 #include <Arduino.h>
 // #include <MessageExchange.h>
@@ -56,7 +58,7 @@ void setup()
   messageExchange.setUartMonitoringDevice(&Serial);
   messageExchange.setSignature("MessageExchange");
 
-  for (int i = 0; ((i < 3) && (err > 0)); i++)
+  for (int i = 0; ((i < 4) && (err > 0)); i++)
   {
     Serial.printf("\n[RVM Init] Step %d\n", i);
     switch (i)
@@ -70,7 +72,13 @@ void setup()
       if (err > 0 && !(err >= 400))
         rvmCred.previewJWT();
       break;
+
     case 2:
+      configTime((rvmConfig.tzGMTPlus * 3600), 0, "192.168.0.178");
+      testNTPClient();
+      break;
+
+    case 3:
       err = mqttInit(rvmConfig.hostname, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
       break;
     }
@@ -88,6 +96,10 @@ void setup()
           break;
         }
         case 2:{
+          haltFirmware("Failed to synchronize system time");
+          break;
+        }
+        case 3:{
           haltFirmware("Failed to connect to MQTT Server");
           break;
         }
@@ -97,6 +109,8 @@ void setup()
     }
   }
 
+
+  
 
   esp_timer_create_args_t timer_args = {
     .callback = &MemberRequest::onTimer,
@@ -129,7 +143,9 @@ void handleIncomingMessage()
   case BEGIN_TRANSACTION:
   {
     Serial.println("[BEGIN_TRANSACTION MESSAGE HANDLER] New Transaction Initiated");
-    transactionState.isBusy = true;
+    
+    transactionState.initializeTransaction();
+    // transactionState.isBusy = true;
 
     break;
   }
@@ -155,12 +171,12 @@ void handleIncomingMessage()
         bool success = mqttClient.publish(rvmConfig.itemPendingTopic, messageBuffer);
         if (success)
         {
-          Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Successfully Reported");
+          Serial.println("[ITEM_ENTRY MESSAGE HANDLER] Successfully Reported");
           break;
         }
         else
         {
-          Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Failed to report");
+          Serial.println("[ITEM_ENTRY MESSAGE HANDLER] Failed to report");
         }
       }
     }
@@ -328,7 +344,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
 void haltFirmware(const char* haltMessage){
   while(1){
     Serial.print("[GLOBAL] OPERATION HALTED! REASON: ");
-    Serial.printf(haltMessage);
+    Serial.println(haltMessage);
     delay(2000);
   }
 

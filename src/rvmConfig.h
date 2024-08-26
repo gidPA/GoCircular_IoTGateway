@@ -24,10 +24,12 @@ struct RVMConfig {
 
     public:
         const char* id = "4002";
-        const char* hostname = "192.168.0.5";
+        const char* hostname = "192.168.0.178";
+        const char* ntpServer = "192.168.0.178";
         const char* httpPort = "4001";
         //const char* httpprefix = "http";
         const char* mqttprefix = "mqtt";
+        int tzGMTPlus = 7;
         //const char* apiEndpoint = "/api/rvm/auth";
 
         char httpAuthURL[100];

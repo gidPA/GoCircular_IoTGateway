@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <string.h>
 #include <ArduinoJson.h>
+#include <time.h>
 
 #define MAX_TRANSACTION_JSON_BUFFER_SIZE 1024
 
@@ -11,6 +12,7 @@
 
 struct TransactionState
 {
+    tm timeObj;
     bool isBusy = true;
     bool isMemberMode = false;
     char memberID[15] = "1000";
@@ -22,6 +24,7 @@ struct TransactionState
     char jsonMessageBuffer[MAX_TRANSACTION_JSON_BUFFER_SIZE];
 
     void setTransactionAsMemberMode(char* memberID);
+    void initializeTransaction();
 
     void finalizeTransaction();
     void resetTransaction();
