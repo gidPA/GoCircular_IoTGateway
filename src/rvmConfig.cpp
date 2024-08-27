@@ -16,7 +16,7 @@ void RVMConfig::initiate() {
     snprintf(setMemberModeTopic, sizeof(setMemberModeTopic), "%s/%s/%s", mqttTopicPrefix, id, setMemberModeSubtopic);
     snprintf(setExchangeRateTopic, sizeof(setExchangeRateTopic), "%s/%s/%s", mqttTopicPrefix, id, setExchangeRateSubtopic);
 
-    snprintf(httpAuthURL, sizeof(httpAuthURL), "http://%s:%s/api/rvm/auth", hostname, httpPort);
+    snprintf(httpAuthURL, sizeof(httpAuthURL), "%s/api/rvm/auth", httpAddress);
 
 
     Serial.println("");
@@ -34,6 +34,6 @@ void RVMConfig::initiate() {
 void RVMConfig::getMQTTUrl(char mqtturl[]){
     char buffer[maxSize];
 
-    snprintf(buffer, maxSize, "%s://%s", mqttprefix, hostname);
+    snprintf(buffer, maxSize, "%s://%s", mqttprefix, mqttAddress);
     strncpy(mqtturl, buffer, maxSize);
 }

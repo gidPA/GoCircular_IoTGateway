@@ -19,14 +19,9 @@ int mqttInit(
     Serial.printf("[MQTT Init] Client ID: %s\n", id);
     Serial.printf("[MQTT Init] Username: %s\n", username);
     Serial.printf("[MQTT Init] JWT: %s\n", jwt);
+    Serial.printf("[MQTT Init] Broker Address: %s\n", hostname);
 
-    IPAddress brokerIP;
-    brokerIP.fromString(hostname);
-
-    Serial.print("[MQTT Init] Previewing IP Address once again, just to make sure: ");
-    Serial.println(brokerIP.toString());
-
-    mqttClient.setServer(brokerIP, 1883);
+    mqttClient.setServer(hostname, 34787);
 
     int i;
     Serial.print("[MQTT Init] Connecting.");

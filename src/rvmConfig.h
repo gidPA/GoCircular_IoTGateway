@@ -24,9 +24,9 @@ struct RVMConfig {
 
     public:
         const char* id = "4002";
-        const char* hostname = "192.168.0.178";
-        const char* ntpServer = "192.168.0.178";
-        const char* httpPort = "4001";
+        const char* httpAddress = "http://rnsvl-202-94-83-80.a.free.pinggy.link";
+        const char* mqttAddress = "rnbkr-202-94-83-80.a.free.pinggy.link";
+        const char* ntpServer = "pool.ntp.org";
         //const char* httpprefix = "http";
         const char* mqttprefix = "mqtt";
         int tzGMTPlus = 7;

@@ -67,19 +67,20 @@ void setup()
       err = connectToWiFi(wifiCred.ssid, wifiCred.pass);
       break;
     case 1:
+      configTime((rvmConfig.tzGMTPlus * 3600), 0, rvmConfig.ntpServer);
+      err = testNTPClient();
+      break;
+
+    case 2:
       err = authenticate(rvmCred.rvmid, rvmCred.secretKey, rvmConfig.httpAuthURL, rvmCred.jwt);
 
       if (err > 0 && !(err >= 400))
         rvmCred.previewJWT();
       break;
 
-    case 2:
-      configTime((rvmConfig.tzGMTPlus * 3600), 0, "192.168.0.178");
-      testNTPClient();
-      break;
 
     case 3:
-      err = mqttInit(rvmConfig.hostname, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
+      err = mqttInit(rvmConfig.mqttAddress, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
       break;
     }
 
@@ -92,11 +93,11 @@ void setup()
           break;
         }
         case 1:{
-          haltFirmware("Failed to authenticate to HTTP Server");
+          haltFirmware("Failed to synchronize system time");
           break;
         }
         case 2:{
-          haltFirmware("Failed to synchronize system time");
+          haltFirmware("Failed to authenticate to HTTP Server");
           break;
         }
         case 3:{
@@ -124,7 +125,7 @@ void loop()
 {
   if (!mqttClient.connected())
   {
-    mqttInit(rvmConfig.hostname, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
+    mqttInit(rvmConfig.mqttAddress, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
   }
   mqttClient.loop();
   if (messageExchange.getUartDevice()->available() >= MESSAGE_SIZE)
