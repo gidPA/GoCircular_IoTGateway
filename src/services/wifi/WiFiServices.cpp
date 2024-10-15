@@ -1,7 +1,9 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 
 WiFiClient net;
+// WiFiClientSecure sslClient;
 
 int connectToWiFi(const char *ssid, const char *pass)
 {

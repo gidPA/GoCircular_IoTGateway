@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
+// #include "services/wifi/WiFiServices.h"
+// #include "services/config/rvmCred.h"
+
 
 int authenticate(const char *rvmid, const char *rvmKey, const char *url, char rvmJWT[])
 {
@@ -9,9 +12,12 @@ int authenticate(const char *rvmid, const char *rvmKey, const char *url, char rv
     Serial.printf("[HTTP Auth Init] RVM key: %s\n", rvmKey);
     Serial.printf("[HTTP Auth Init] API URL: %s\n", url);
 
+    // sslClient.setCACert(rvmCred.rootCACertificate);
+
     HTTPClient httpClient;
 
     httpClient.begin(String(url));
+    httpClient.addHeader("Content-Type", "application/json");
 
     JsonDocument bodyObj;
     bodyObj["rvmid"] = rvmid;
@@ -20,6 +26,7 @@ int authenticate(const char *rvmid, const char *rvmKey, const char *url, char rv
 
     String body;
     serializeJson(bodyObj, body);
+    Serial.println(body);
 
     int resCode = httpClient.POST(body);
 
