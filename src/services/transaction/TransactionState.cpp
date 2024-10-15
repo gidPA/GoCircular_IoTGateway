@@ -1,6 +1,6 @@
 #include "TransactionState.h"
 #include "services/mqtt/mqttServices.h"
-#include "rvmConfig.h"
+#include "services/config/rvmConfig.h"
 #include "services/message/messageExchangeObj.h"
 #include "services/time/timeHandler.h"
 
@@ -39,12 +39,12 @@ void TransactionState::appendNewItem(byte enteredItem[], byte itemDataLength)
     currentPoints += enteredItem[2];
 }
 
-void TransactionState::finalizeTransaction(){
+void TransactionState::finalizeTransaction(char* transactionReportTopic){
     Serial.println("[TRANSACTION_STATE] Finalizing Transaction....");
     createTotalJsonMessage();
 
     for(int i = 0; i < 3; i++){
-        bool isSuccesful = mqttClient.publish(rvmConfig.transactionReportTopic, jsonMessageBuffer);
+        bool isSuccesful = mqttClient.publish(transactionReportTopic, jsonMessageBuffer);
         if(isSuccesful){
             Serial.println("[TRANSACTION_STATE] Transaction successful!");
             break;
@@ -65,11 +65,11 @@ void TransactionState::createTotalJsonMessage()
     createSQLTimestamp(&timeObj, timeStringBuffer, sizeof(timeStringBuffer));
 
     
-    doc["isSuccessful"] = true;
+    // doc["isSuccessful"] = true;
     doc["transactionDate"] = timeStringBuffer;
     doc["userID"] = memberID;
     doc["rvmID"] = rvmConfig.id;
-    doc["totalPoints"] = currentPoints;
+    // doc["totalPoints"] = currentPoints;
 
     JsonArray recyclableData = doc["recyclableItems"].to<JsonArray>();
 

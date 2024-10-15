@@ -7,12 +7,11 @@
 #include <Arduino.h>
 // #include <MessageExchange.h>
 #include <ArduinoJson.h>
-#include <esp_timer.h>
 
-#include "rvmCred.h"
-#include "rvmConfig.h"
+#include "services/config/rvmCred.h"
+#include "services/config/rvmConfig.h"
 
-#include "models/TransactionState.h"
+#include "services/transaction/TransactionState.h"
 
 #include "services/message/messageExchangeObj.h"
 #include "services/message/SetMemberModeRequest.h"
@@ -40,7 +39,7 @@ void createPendingRecyclableJson(byte recyclableData[], char messageBuffer[]);
 void createRecyclableJson(byte recyclableData[], char messageBuffer[]);
 void haltFirmware(const char* haltMessage);
 
-void mqttCallback(char *topic, byte *payload, unsigned int length);
+// void mqttCallback(char *topic, byte *payload, unsigned int length);
 
 void setup()
 {
@@ -80,7 +79,7 @@ void setup()
 
 
     case 3:
-      err = mqttInit(rvmConfig.mqttAddress, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
+      err = mqttInit(rvmConfig.mqttAddress, rvmConfig.mqttPort, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
       break;
     }
 
@@ -113,23 +112,24 @@ void setup()
 
   
 
-  esp_timer_create_args_t timer_args = {
-    .callback = &MemberRequest::onTimer,
-    .name = "Periodic UART Timer"
-  };
+  // esp_timer_create_args_t timer_args = {
+  //   .callback = &MemberRequest::onTimer,
+  //   .name = "Periodic UART Timer"
+  // };
 
-  esp_timer_create(&timer_args, &memberModeRequestTimer);
+  // esp_timer_create(&timer_args, &memberModeRequestTimer);
 }
 
 void loop()
 {
   if (!mqttClient.connected())
   {
-    mqttInit(rvmConfig.mqttAddress, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
+    mqttInit(rvmConfig.mqttAddress, rvmConfig.mqttPort, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
   }
   mqttClient.loop();
-  if (messageExchange.getUartDevice()->available() >= MESSAGE_SIZE)
+  if (messageExchange.getUartDevice()->available())
   {
+    Serial.println("Incoming Message");
     handleIncomingMessage();
   }
 }
@@ -220,7 +220,7 @@ void handleIncomingMessage()
   {
     // messageExchange.previewMessage();
     Serial.println("[TRANSACTION_COMPLETE MESSAGE HANDLER] Current transaction completed");
-    transactionState.finalizeTransaction();
+    transactionState.finalizeTransaction(rvmConfig.transactionReportTopic);
     break;
   }
 
@@ -261,7 +261,7 @@ void createPendingRecyclableJson(byte recyclableData[], char messageBuffer[])
   Serial.println("Creating JSON....");
   JsonDocument doc;
 
-  JsonArray data = doc["pendingItem"].to<JsonArray>();
+  JsonArray data = doc["enteredItem"].to<JsonArray>();
   data.add(recyclableData[0]);
   data.add(recyclableData[1]);
 
@@ -293,54 +293,54 @@ void createRecyclableJson(byte recyclableData[], char messageBuffer[])
   strncpy(messageBuffer, output, 100);
 }
 
-void mqttCallback(char *topic, byte *payload, unsigned int length)
-{
-  Serial.print("[MQTT CALLBACK] Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++)
-  {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
+// void mqttCallback(char *topic, byte *payload, unsigned int length)
+// {
+//   Serial.print("[MQTT CALLBACK] Message arrived [");
+//   Serial.print(topic);
+//   Serial.print("] ");
+//   for (int i = 0; i < length; i++)
+//   {
+//     Serial.print((char)payload[i]);
+//   }
+//   Serial.println();
 
-  if (strcmp(topic, rvmConfig.setMemberModeTopic) == 0)
-  {
-    char idchar[15];
-    memcpy(idchar, payload, 15);
-    idchar[length] = '\0';
+//   if (strcmp(topic, rvmConfig.setMemberModeTopic) == 0)
+//   {
+//     char idchar[15];
+//     memcpy(idchar, payload, 15);
+//     idchar[length] = '\0';
 
-    int idInt = atoi(idchar);
-    if (idInt >= 1000 && idInt < 2000)
-    {
-      strncpy(transactionState.memberID, idchar, sizeof(transactionState.memberID));
-      // MemberRequest::startPeriodicRequest();
+//     int idInt = atoi(idchar);
+//     if (idInt >= 1000 && idInt < 2000)
+//     {
+//       strncpy(transactionState.memberID, idchar, sizeof(transactionState.memberID));
+//       // MemberRequest::startPeriodicRequest();
 
-      messageExchange.createNewMessage(SET_MEMBER_MODE);
-      messageExchange.previewMessage();
-      messageExchange.sendMessage();
+//       messageExchange.createNewMessage(SET_MEMBER_MODE);
+//       messageExchange.previewMessage();
+//       messageExchange.sendMessage();
 
-      while(1){
-        if(messageExchange.checkMessageEntry()){
-          messageExchange.handleIncomingMessage();
-          messageExchange.previewMessage();
-          break;
-        };
+//       while(1){
+//         if(messageExchange.checkMessageEntry()){
+//           messageExchange.handleIncomingMessage();
+//           messageExchange.previewMessage();
+//           break;
+//         };
 
-        delay(2000);
-        messageExchange.createNewMessage(SET_MEMBER_MODE);
-        messageExchange.previewMessage();
-        messageExchange.sendMessage();
+//         delay(2000);
+//         messageExchange.createNewMessage(SET_MEMBER_MODE);
+//         messageExchange.previewMessage();
+//         messageExchange.sendMessage();
 
-      }
-    }
-    else
-    {
-      Serial.printf("\n[SET_MEMBER_MODE MQTT Callback] Invalid user ID: %s\n", idchar);
-      mqttClient.publish(rvmConfig.setMemberModeResponseTopic, "120");
-    }
-  }
-}
+//       }
+//     }
+//     else
+//     {
+//       Serial.printf("\n[SET_MEMBER_MODE MQTT Callback] Invalid user ID: %s\n", idchar);
+//       mqttClient.publish(rvmConfig.setMemberModeResponseTopic, "120");
+//     }
+//   }
+// }
 
 void haltFirmware(const char* haltMessage){
   while(1){
@@ -348,5 +348,4 @@ void haltFirmware(const char* haltMessage){
     Serial.println(haltMessage);
     delay(2000);
   }
-
 }

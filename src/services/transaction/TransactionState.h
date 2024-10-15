@@ -26,7 +26,7 @@ struct TransactionState
     void setTransactionAsMemberMode(char* memberID);
     void initializeTransaction();
 
-    void finalizeTransaction();
+    void finalizeTransaction(char* transactionReportTopic);
     void resetTransaction();
 
     void appendNewItem(byte enteredItem[], byte itemDataLength);
