@@ -4,9 +4,7 @@
 // #include "services/wifi/WiFiServices.h"
 // #include "services/config/rvmCred.h"
 
-
-int authenticate(const char *rvmid, const char *rvmKey, const char *url, char rvmJWT[])
-{
+int authenticate(const char *rvmid, const char *rvmKey, const char *url, char rvmJWT[]) {
     Serial.println("\n[HTTP Auth Init] Authenticating...");
     Serial.printf("[HTTP Auth Init] RVM ID: %s\n", rvmid);
     Serial.printf("[HTTP Auth Init] RVM key: %s\n", rvmKey);
@@ -34,8 +32,7 @@ int authenticate(const char *rvmid, const char *rvmKey, const char *url, char rv
 
     // httpClient.POST()
 
-    if (resCode >= 200 && resCode < 250)
-    {
+    if (resCode >= 200 && resCode < 250) {
         Serial.print("\n[HTTP Auth Init] Succesfully authenticated ");
         Serial.printf("with response code %d", resCode);
 
@@ -46,28 +43,19 @@ int authenticate(const char *rvmid, const char *rvmKey, const char *url, char rv
         JsonDocument doc;
         DeserializationError error = deserializeJson(doc, response);
 
-        if (error)
-        {
+        if (error) {
             Serial.print("[HTTP Auth Init] deserializeJson() failed: ");
             Serial.println(error.c_str());
-        }
-        else
-        {
+        } else {
             const char *jwtToken = doc["jwtToken"];
             // Serial.printf("\n[HTTP Auth Init] JWT: %s", jwtToken);
             strncpy(rvmJWT, jwtToken, 200);
         }
-    }
-    else if (resCode >= 400 && resCode < 500)
-    {
+    } else if (resCode >= 400 && resCode < 500) {
         Serial.printf("\n[HTTP Auth Init] Failed to authenticate with response code %d (possible incorrect credentials)\n", resCode);
-    }
-    else if (resCode >= 500 && resCode < 600)
-    {
+    } else if (resCode >= 500 && resCode < 600) {
         Serial.printf("\n[HTTP Auth Init] Failed to authenticate with response code %d (server error)\n", resCode);
-    }
-    else
-    {
+    } else {
         Serial.printf("\n[HTTP Auth Init] Failed to authenticate with response code %d (connection lost)\n", resCode);
     }
 
