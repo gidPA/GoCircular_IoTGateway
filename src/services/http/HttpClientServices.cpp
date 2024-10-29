@@ -1,8 +1,6 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
-// #include "services/wifi/WiFiServices.h"
-// #include "services/config/rvmCred.h"
 
 int authenticate(const char *rvmid, const char *rvmKey, const char *url, char rvmJWT[]) {
     Serial.println("\n[HTTP Auth Init] Authenticating...");

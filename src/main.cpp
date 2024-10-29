@@ -11,6 +11,7 @@
 #include "services/mqtt/mqttServices.h"
 #include "services/transaction/TransactionState.h"
 #include "services/wifi/WiFiServices.h"
+#include "services/analytics/RoundTripMeasurement.h"
 
 
 unsigned long lastMillis = 0;
@@ -23,8 +24,8 @@ void printHeapInfo() {
 }
 
 void handleIncomingMessage();
-void createPendingRecyclableJson(byte recyclableData[], char messageBuffer[]);
-void createRecyclableJson(byte recyclableData[], char messageBuffer[]);
+// void createPendingRecyclableJson(byte recyclableData[], char messageBuffer[]);
+void createRecyclableJson(uint64_t recyclableData[], char messageBuffer[]);
 void haltFirmware(const char* haltMessage);
 
 // void mqttCallback(char *topic, byte *payload, unsigned int length);
@@ -121,17 +122,21 @@ void handleIncomingMessage() {
 
             if (entryStatus == STAT_PENDING) {
                 Serial.println("[ITEM_ENTRY MESSAGE HANDLER] Incoming pending item information");
-                byte data[2];
+                uint64_t data[2];
                 data[0] = messageExchange.getItemType();
                 data[1] = messageExchange.getItemSize();
+                data[2] = 0;
 
                 // Serial.printf("Data value: %s, %s", data[0], data[1]);
 
                 char messageBuffer[100];
-                createPendingRecyclableJson(data, messageBuffer);
-                Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Created JSON: %s\n\n", messageBuffer);
+                //Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Created JSON: %s\n\n", messageBuffer);
 
                 for (int i = 0; i < 3; i++) {
+                    data[3] = roundTripMeasurement.createNewTimestamp();
+                    char messageBuffer[100];
+                    createRecyclableJson(data, messageBuffer);
+                    Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Created JSON: %s\n\n", messageBuffer);
                     bool success = mqttClient.publish(rvmConfig.itemPendingTopic, messageBuffer);
                     if (success) {
                         Serial.println("[ITEM_ENTRY MESSAGE HANDLER] Successfully Reported");
@@ -144,16 +149,17 @@ void handleIncomingMessage() {
 
             else if (entryStatus == ACCEPTED) {
                 Serial.println("[ITEM_ENTRY MESSAGE HANDLER] An item has been accepted");
-                byte data[3];
+                uint64_t data[3];
                 data[0] = messageExchange.getItemType();
                 data[1] = messageExchange.getItemSize();
                 data[2] = messageExchange.getItemPoint();
 
                 char messageBuffer[100];
-                createRecyclableJson(data, messageBuffer);
-                Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Created JSON: %s\n\n", messageBuffer);
 
                 for (int i = 0; i < 3; i++) {
+                    data[3] = roundTripMeasurement.createNewTimestamp();
+                    createRecyclableJson(data, messageBuffer);
+                    Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Created JSON: %s\n\n", messageBuffer);
                     bool success = mqttClient.publish(rvmConfig.itemEntryTopic, messageBuffer);
                     if (success) {
                         Serial.println("[ITEM_ENTRY MESSAGE HANDLER] Successfully Reported");
@@ -163,9 +169,32 @@ void handleIncomingMessage() {
                     }
                 }
 
-                transactionState.appendNewItem(data, 3);
+                transactionState.appendNewItem(data, sizeof(data));
 
                 transactionState.previewTotalJsonMessage();
+            } else if (entryStatus == DECLINED){
+                Serial.println("[ITEM_ENTRY MESSAGE HANDLER] An Item has been rejected");
+                uint64_t data[2];
+                data[0] = messageExchange.getItemType();
+                data[1] = messageExchange.getItemSize();
+                data[2] = 0;
+                data[3] = 0;
+
+                // Serial.printf("Data value: %s, %s", data[0], data[1]);
+
+                char messageBuffer[100];
+                createRecyclableJson(data, messageBuffer);
+                Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Created JSON: %s\n\n", messageBuffer);
+
+                for (int i = 0; i < 3; i++) {
+                    bool success = mqttClient.publish(rvmConfig.itemRejectTopic, messageBuffer);
+                    if (success) {
+                        Serial.println("[ITEM_ENTRY MESSAGE HANDLER] Successfully Reported");
+                        break;
+                    } else {
+                        Serial.println("[ITEM_ENTRY MESSAGE HANDLER] Failed to report");
+                    }
+                }
             }
 
             break;
@@ -185,24 +214,24 @@ void handleIncomingMessage() {
     }
 }
 
-void createPendingRecyclableJson(byte recyclableData[], char messageBuffer[]) {
-    Serial.println("Creating JSON....");
-    JsonDocument doc;
+// void createPendingRecyclableJson(byte recyclableData[], char messageBuffer[], uint64_t timestampId) {
+//     Serial.println("Creating JSON....");
+//     JsonDocument doc;
 
-    JsonArray data = doc["enteredItem"].to<JsonArray>();
-    data.add(recyclableData[0]);
-    data.add(recyclableData[1]);
+//     JsonArray data = doc["enteredItem"].to<JsonArray>();
+//     data.add(recyclableData[0]);
+//     data.add(recyclableData[1]);
 
-    char output[100];
+//     char output[100];
 
-    doc.shrinkToFit();  // optional
+//     doc.shrinkToFit();  // optional
 
-    serializeJson(doc, output);
+//     serializeJson(doc, output);
 
-    memcpy(messageBuffer, output, 100);
-}
+//     memcpy(messageBuffer, output, 100);
+// }
 
-void createRecyclableJson(byte recyclableData[], char messageBuffer[]) {
+void createRecyclableJson(uint64_t recyclableData[], char messageBuffer[]) {
     Serial.println("Creating JSON....");
     JsonDocument doc;
 
@@ -210,6 +239,7 @@ void createRecyclableJson(byte recyclableData[], char messageBuffer[]) {
     data.add(recyclableData[0]);
     data.add(recyclableData[1]);
     data.add(recyclableData[2]);
+    data.add(recyclableData[3]);
 
     char output[100];
 

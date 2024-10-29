@@ -13,11 +13,11 @@
 struct TransactionState
 {
     tm timeObj;
-    bool isBusy = true;
+    bool isBusy = false;
     bool isMemberMode = false;
     char memberID[15] = "1000";
 
-    byte items[20][3];
+    uint64_t items[20][4];
     int currentPoints = 0;
     int itemCount = 0;
 
@@ -29,7 +29,7 @@ struct TransactionState
     void finalizeTransaction(char* transactionReportTopic);
     void resetTransaction();
 
-    void appendNewItem(byte enteredItem[], byte itemDataLength);
+    void appendNewItem(uint64_t enteredItem[], byte itemDataLength);
     
     void createTotalJsonMessage();
 

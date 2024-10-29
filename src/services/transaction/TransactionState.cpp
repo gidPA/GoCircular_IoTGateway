@@ -3,15 +3,28 @@
 #include "services/config/rvmConfig.h"
 #include "services/message/messageExchangeObj.h"
 #include "services/time/timeHandler.h"
+#include "services/transaction/memberModeConfirm.h"
 
 
 void TransactionState::setTransactionAsMemberMode(char* memberID){
     if(!isBusy){
-        this->isMemberMode = true;
-        strncpy(this->memberID, memberID, 15);
+        int response = requestConfirmationToRVM();
+        char readiness[6];
+        snprintf(
+            readiness, 
+            sizeof(readiness),
+            "%d",
+            response
+        );
+        if (response == 1){ // RVM Controller Approves Member Mode
+            strncpy(this->memberID, memberID, sizeof(this->memberID));
+            this->isMemberMode = true;
+            this->isBusy = true;
+        }
+        mqttClient.publish(rvmConfig.setMemberModeResponseTopic, readiness);
     }
     else{
-        mqttClient.publish(rvmConfig.setMemberModeResponseTopic, "-2");
+        mqttClient.publish(rvmConfig.setMemberModeResponseTopic, "127");
     }
 }
 
@@ -19,7 +32,7 @@ void TransactionState::setTransactionAsMemberMode(char* memberID){
 void TransactionState::resetTransaction()
 {
     
-    isBusy = true;
+    isBusy = false;
     isMemberMode = false;
     currentPoints = 0;
     itemCount = 0;
@@ -27,7 +40,7 @@ void TransactionState::resetTransaction()
     strncpy(jsonMessageBuffer, "", MAX_TRANSACTION_JSON_BUFFER_SIZE);
 }
 
-void TransactionState::appendNewItem(byte enteredItem[], byte itemDataLength)
+void TransactionState::appendNewItem(uint64_t enteredItem[], byte itemDataLength)
 {
     //Serial.printf("[TRANSACTION STATE] Entered Item: %d %d %d", items[itemCount][0], items[itemCount][1], items[itemCount][2]);
 

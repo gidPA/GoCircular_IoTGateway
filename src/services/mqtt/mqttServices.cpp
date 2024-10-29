@@ -4,7 +4,9 @@
 #include "services/wifi/WiFiServices.h"
 #include "services/transaction/TransactionState.h"
 #include "services/config/rvmConfig.h"
-#include "services/message/messageExchangeObj.h"
+// #include "services/message/messageExchangeObj.h"
+#include "services/transaction/memberModeConfirm.h"
+#include "services/analytics/RoundTripMeasurement.h"
 
 PubSubClient mqttClient(net);
 
@@ -34,6 +36,7 @@ int mqttInit(
 
             mqttClient.subscribe(rvmConfig.setExchangeRateTopic);
             mqttClient.subscribe(rvmConfig.setMemberModeTopic);
+            mqttClient.subscribe(rvmConfig.timestampMarkingTopic);
 
             // mqttClient.subscribe("gocircular/rvm/4002/input/transaction/memberMode");
             Serial.println("[MQTT Init]Succesfully subscribed");
@@ -73,28 +76,23 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         int idInt = atoi(idchar);
         if (idInt >= 1000 && idInt < 2000)
         {
-            strncpy(transactionState.memberID, idchar, sizeof(transactionState.memberID));
-            // MemberRequest::startPeriodicRequest();
-
-            messageExchange.createNewMessage(SET_MEMBER_MODE);
-            messageExchange.previewMessage();
-
-            messageExchange.sendMessageAndWait();
-
-            char readiness[6];
-            snprintf(
-                readiness, 
-                sizeof(readiness),
-                "%d",
-                messageExchange.getMemberModeReadiness()
-            );
-            
-            mqttClient.publish(rvmConfig.setMemberModeResponseTopic, readiness);
+            transactionState.setTransactionAsMemberMode(idchar);
         }
         else
         {
             Serial.printf("\n[SET_MEMBER_MODE MQTT Callback] Invalid user ID: %s\n", idchar);
             mqttClient.publish(rvmConfig.setMemberModeResponseTopic, "120");
         }
+    } else if(strcmp(topic,rvmConfig.timestampMarkingTopic) == 0){
+        char idchar[30];
+        memcpy(idchar, payload, sizeof(idchar));
+        idchar[length] = '\0';
+
+        uint64_t timestampID = strtoull(idchar, nullptr, 10);
+        Serial.printf("[Round Trip Measurement] Timestamp ID: %llu \n", timestampID);
+
+        uint64_t timestampDiff = roundTripMeasurement.setEndTimestamp(timestampID, micros());
+        
+        Serial.printf("[Round Trip Measurement] Current Message Latency: %llu\n", timestampDiff);
     }
 }

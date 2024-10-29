@@ -8,6 +8,7 @@ void RVMConfig::initiate() {
 
     snprintf(itemPendingTopic, sizeof(itemPendingTopic), "%s/%s/%s", mqttTopicPrefix, id, itemPendingSubtopic);
     snprintf(itemEntryTopic, sizeof(itemEntryTopic), "%s/%s/%s", mqttTopicPrefix, id, itemEntrySubtopic);
+    snprintf(itemRejectTopic, sizeof(itemRejectTopic), "%s/%s/%s", mqttTopicPrefix, id, itemRejectSubtopic);
     snprintf(transactionReportTopic, sizeof(transactionReportTopic), "%s/%s/%s", mqttTopicPrefix, id, transactionReportSubtopic);
     snprintf(binFullAlertTopic, sizeof(binFullAlertTopic), "%s/%s/%s", mqttTopicPrefix, id, binFullAlertSubtopic);
     snprintf(coinEmptyTopic, sizeof(coinEmptyTopic), "%s/%s/%s", mqttTopicPrefix, id, coinEmptySubtopic);
@@ -15,6 +16,8 @@ void RVMConfig::initiate() {
     snprintf(setMemberModeResponseTopic, sizeof(setMemberModeResponseTopic), "%s/%s/%s", mqttTopicPrefix, id, setMemberModeResponseSubtopic);
     snprintf(setMemberModeTopic, sizeof(setMemberModeTopic), "%s/%s/%s", mqttTopicPrefix, id, setMemberModeSubtopic);
     snprintf(setExchangeRateTopic, sizeof(setExchangeRateTopic), "%s/%s/%s", mqttTopicPrefix, id, setExchangeRateSubtopic);
+
+    snprintf(timestampMarkingTopic, sizeof(timestampMarkingTopic), "%s/%s/%s", mqttTopicPrefix, id, timestampMarkingSubtopic);
 
     snprintf(httpAuthURL, sizeof(httpAuthURL), "%s/api/rvm/auth", httpAddress);
 
