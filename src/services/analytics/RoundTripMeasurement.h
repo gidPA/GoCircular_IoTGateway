@@ -4,6 +4,7 @@
 #include <map>
 #include <Arduino.h>
 #include <stdint.h>
+#include <ArduinoJson.h>
 #include "TrackingTimestamp.h"
 
 class RoundTripMeasurement{
@@ -14,6 +15,8 @@ class RoundTripMeasurement{
         uint64_t setEndTimestamp(uint64_t timestampId, uint64_t endTimestamp);
         uint64_t getTimestampDifference(uint64_t timestampId);
         void clearTimestamps();
+        void createTimestampJsonArray(JsonArray &arr);
+
 };
 
 extern RoundTripMeasurement roundTripMeasurement;

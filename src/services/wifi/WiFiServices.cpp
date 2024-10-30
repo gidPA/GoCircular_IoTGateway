@@ -16,7 +16,7 @@ int connectToWiFi(const char *ssid, const char *pass)
         {
             Serial.print("\n[WiFi Init] Succesfully connected to WiFi with IP Address: ");
             Serial.println(WiFi.localIP());
-            delay(6000);
+            // delay(6000);
             return 1;
         }
         else

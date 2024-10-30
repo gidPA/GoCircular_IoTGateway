@@ -4,6 +4,7 @@
 #include "services/message/messageExchangeObj.h"
 #include "services/time/timeHandler.h"
 #include "services/transaction/memberModeConfirm.h"
+#include "services/analytics/RoundTripMeasurement.h"
 
 
 void TransactionState::setTransactionAsMemberMode(char* memberID){
@@ -68,6 +69,7 @@ void TransactionState::finalizeTransaction(char* transactionReportTopic){
 
 
     resetTransaction();
+    roundTripMeasurement.clearTimestamps();
 }
 
 void TransactionState::createTotalJsonMessage()
@@ -93,10 +95,17 @@ void TransactionState::createTotalJsonMessage()
         recyclableItem.add(items[i][1]);
         recyclableItem.add(items[i][2]);
     }
+    if(isMemberMode){
+        JsonArray latencyData = doc["latencyData"].to<JsonArray>();
+        roundTripMeasurement.createTimestampJsonArray(latencyData);
+    }
+
 
     doc.shrinkToFit(); // optional
 
     serializeJson(doc, jsonMessageBuffer);
+
+
 }
 
 void TransactionState::previewTotalJsonMessage()

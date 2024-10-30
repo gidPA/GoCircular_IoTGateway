@@ -12,21 +12,29 @@
 #include "services/transaction/TransactionState.h"
 #include "services/wifi/WiFiServices.h"
 #include "services/analytics/RoundTripMeasurement.h"
+#include "services/indicators/LedIndicator.h"
+
+const int LED_BUSY_PIN = 25;
+const int LED_IDLE_PIN = 26;
+const int LED_ERROR_PIN = 27;
+
 
 
 unsigned long lastMillis = 0;
 
-void printHeapInfo() {
-    Serial.printf("Total Heap: %d bytes\n", ESP.getHeapSize());
-    Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
-    Serial.printf("Min Free Heap: %d bytes\n", ESP.getMinFreeHeap());
-    Serial.printf("Max Allocatable Heap: %d bytes\n", ESP.getMaxAllocHeap());
-}
+// void printHeapInfo() {
+//     Serial.printf("Total Heap: %d bytes\n", ESP.getHeapSize());
+//     Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
+//     Serial.printf("Min Free Heap: %d bytes\n", ESP.getMinFreeHeap());
+//     Serial.printf("Max Allocatable Heap: %d bytes\n", ESP.getMaxAllocHeap());
+// }
 
 void handleIncomingMessage();
 // void createPendingRecyclableJson(byte recyclableData[], char messageBuffer[]);
 void createRecyclableJson(uint64_t recyclableData[], char messageBuffer[]);
 void haltFirmware(const char* haltMessage);
+
+LedIndicator ledIndicator(LED_BUSY_PIN, LED_IDLE_PIN, LED_ERROR_PIN);
 
 // void mqttCallback(char *topic, byte *payload, unsigned int length);
 
@@ -38,6 +46,7 @@ void setup() {
     delay(2000);
 
     rvmConfig.initiate();
+    ledIndicator.setState("initializing");
 
     int err = 1;
 
@@ -52,45 +61,50 @@ void setup() {
                 err = connectToWiFi(wifiCred.ssid, wifiCred.pass);
                 break;
             case 1:
-                configTime((rvmConfig.tzGMTPlus * 3600), 0, rvmConfig.ntpServer);
-                err = testNTPClient();
-                break;
-
-            case 2:
                 err = authenticate(rvmCred.rvmid, rvmCred.secretKey, rvmConfig.httpAuthURL, rvmCred.jwt);
 
                 if (err > 0 && !(err >= 400))
                     rvmCred.previewJWT();
+                else{
+                    err = -1;
+                }
+                break;
+
+            case 2:
+                err = mqttInit(rvmConfig.mqttAddress, rvmConfig.mqttPort, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
                 break;
 
             case 3:
-                err = mqttInit(rvmConfig.mqttAddress, rvmConfig.mqttPort, rvmCred.rvmid, rvmCred.rvmid, rvmCred.jwt, mqttCallback);
+                configTime((rvmConfig.tzGMTPlus * 3600), 0, rvmConfig.ntpServer);
+                err = testNTPClient();
                 break;
         }
 
         if (err <= 0) {
             Serial.printf("\n[RVM Init] Step %d has failed. Init stage aborted\n", i);
+            int errorCode = i + 3;
+            ledIndicator.setState("error", errorCode);
             switch (i) {
                 case 0: {
-                    haltFirmware("Failed to connect to WiFi Network");
+                    haltFirmware("Error 3->Failed to connect to WiFi Network");
                     break;
                 }
                 case 1: {
-                    haltFirmware("Failed to synchronize system time");
+                    haltFirmware("Error 4->Failed to authenticate to HTTP Server");
                     break;
                 }
                 case 2: {
-                    haltFirmware("Failed to authenticate to HTTP Server");
+                    haltFirmware("Error 5->Failed to connect to MQTT Server");
                     break;
                 }
                 case 3: {
-                    haltFirmware("Failed to connect to MQTT Server");
+                    haltFirmware("Error 6->Failed to request time information");
                     break;
                 }
             }
         }
     }
-
+    ledIndicator.setState("idle");
 }
 
 void loop() {
@@ -110,6 +124,7 @@ void handleIncomingMessage() {
 
     switch (messageTopic) {
         case BEGIN_TRANSACTION: {
+            ledIndicator.setState("busy");
             Serial.println("[BEGIN_TRANSACTION MESSAGE HANDLER] New Transaction Initiated");
 
             transactionState.initializeTransaction();
@@ -133,7 +148,7 @@ void handleIncomingMessage() {
                 //Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Created JSON: %s\n\n", messageBuffer);
 
                 for (int i = 0; i < 3; i++) {
-                    data[3] = roundTripMeasurement.createNewTimestamp();
+                    data[3] = 0;
                     char messageBuffer[100];
                     createRecyclableJson(data, messageBuffer);
                     Serial.printf("[ITEM_ENTRY MESSAGE HANDLER] Created JSON: %s\n\n", messageBuffer);
@@ -203,6 +218,7 @@ void handleIncomingMessage() {
         case TRANSACTION_COMPLETE: {
             Serial.println("[TRANSACTION_COMPLETE MESSAGE HANDLER] Current transaction completed");
             transactionState.finalizeTransaction(rvmConfig.transactionReportTopic);
+            ledIndicator.setState("idle");
             break;
         }
 

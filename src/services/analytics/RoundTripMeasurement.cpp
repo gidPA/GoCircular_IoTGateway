@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "RoundTripMeasurement.h"
+#include <ArduinoJson.h>
 
 uint64_t RoundTripMeasurement::createNewTimestamp(){
     uint64_t timestampID = micros();
@@ -23,6 +24,16 @@ uint64_t RoundTripMeasurement::getTimestampDifference(uint64_t timestampId){
 
 void RoundTripMeasurement::clearTimestamps(){
     this->messageTimestampContainer.clear();
+}
+
+void RoundTripMeasurement::createTimestampJsonArray(JsonArray &arr){
+    // for(auto& [id, ts] : this->messageTimestampContainer){
+    //     arr.add(ts.diffTimestamp);
+    // }
+
+    for (auto it = this->messageTimestampContainer.begin(); it != this->messageTimestampContainer.end(); ++it) {
+        arr.add(it->second.diffTimestamp);
+    }
 }
 
 RoundTripMeasurement roundTripMeasurement;
