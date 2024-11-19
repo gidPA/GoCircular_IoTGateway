@@ -10,8 +10,9 @@ void RVMConfig::initiate() {
     snprintf(itemEntryTopic, sizeof(itemEntryTopic), "%s/%s/%s", mqttTopicPrefix, id, itemEntrySubtopic);
     snprintf(itemRejectTopic, sizeof(itemRejectTopic), "%s/%s/%s", mqttTopicPrefix, id, itemRejectSubtopic);
     snprintf(transactionReportTopic, sizeof(transactionReportTopic), "%s/%s/%s", mqttTopicPrefix, id, transactionReportSubtopic);
-    snprintf(binFullAlertTopic, sizeof(binFullAlertTopic), "%s/%s/%s", mqttTopicPrefix, id, binFullAlertSubtopic);
-    snprintf(coinEmptyTopic, sizeof(coinEmptyTopic), "%s/%s/%s", mqttTopicPrefix, id, coinEmptySubtopic);
+    snprintf(rvmStatusTopic, sizeof(rvmStatusTopic), "%s/%s/%s", mqttTopicPrefix, id, rvmStatusSubtopic);
+    // snprintf(binFullAlertTopic, sizeof(binFullAlertTopic), "%s/%s/%s", mqttTopicPrefix, id, binFullAlertSubtopic);
+    // snprintf(coinEmptyTopic, sizeof(coinEmptyTopic), "%s/%s/%s", mqttTopicPrefix, id, coinEmptySubtopic);
     
     snprintf(setMemberModeResponseTopic, sizeof(setMemberModeResponseTopic), "%s/%s/%s", mqttTopicPrefix, id, setMemberModeResponseSubtopic);
     snprintf(setMemberModeTopic, sizeof(setMemberModeTopic), "%s/%s/%s", mqttTopicPrefix, id, setMemberModeSubtopic);
@@ -26,8 +27,9 @@ void RVMConfig::initiate() {
     Serial.printf("[RVMConfig] itemPendingTopic: %s\n", itemPendingTopic);
     Serial.printf("[RVMConfig] itemEntryTopic: %s\n", itemEntryTopic);
     Serial.printf("[RVMConfig] transactionReportTopic: %s\n", transactionReportTopic);
-    Serial.printf("[RVMConfig] binFullAlertTopic: %s\n", binFullAlertTopic);
-    Serial.printf("[RVMConfig] coinEmptyTopic: %s\n", coinEmptyTopic);
+    Serial.printf("[RVMConfig] rvmStatusTopic: %s\n", rvmStatusTopic);
+    // Serial.printf("[RVMConfig] binFullAlertTopic: %s\n", binFullAlertTopic);
+    // Serial.printf("[RVMConfig] coinEmptyTopic: %s\n", coinEmptyTopic);
     Serial.printf("[RVMConfig] setMemberModeTopic: %s\n", setMemberModeTopic);
     Serial.printf("[RVMConfig] setMemberModeResponseTopic: %s\n", setMemberModeResponseTopic);
     Serial.printf("[RVMConfig] setExchangeRateTopic: %s\n", setExchangeRateTopic);

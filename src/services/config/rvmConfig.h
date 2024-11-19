@@ -15,8 +15,10 @@ struct RVMConfig {
         const char* itemRejectSubtopic = "output/rejected_item";
         const char* transactionReportSubtopic = "output/transaction_report";
 
-        const char* binFullAlertSubtopic = "output/bin_full";
-        const char* coinEmptySubtopic = "output/coin_empty";
+        const char* rvmStatusSubtopic = "output/status";
+
+        // const char* binFullAlertSubtopic = "output/bin_full";
+        // const char* coinEmptySubtopic = "output/coin_empty";
 
 
         const char* setMemberModeResponseSubtopic = "output/member_mode_ack";
@@ -43,8 +45,9 @@ struct RVMConfig {
         char itemEntryTopic[100];
         char itemRejectTopic[100];
         char transactionReportTopic[100];
-        char binFullAlertTopic[100];
-        char coinEmptyTopic[100];
+        char rvmStatusTopic[100];
+        // char binFullAlertTopic[100];
+        // char coinEmptyTopic[100];
 
         char setMemberModeResponseTopic[100];
         char setMemberModeTopic[100];

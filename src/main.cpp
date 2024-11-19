@@ -128,6 +128,7 @@ void handleIncomingMessage() {
             Serial.println("[BEGIN_TRANSACTION MESSAGE HANDLER] New Transaction Initiated");
 
             transactionState.initializeTransaction();
+            publishMQTTStatus("ONLINE_BUSY");
             // transactionState.isBusy = true;
 
             break;
@@ -218,6 +219,7 @@ void handleIncomingMessage() {
         case TRANSACTION_COMPLETE: {
             Serial.println("[TRANSACTION_COMPLETE MESSAGE HANDLER] Current transaction completed");
             transactionState.finalizeTransaction(rvmConfig.transactionReportTopic);
+            publishMQTTStatus("ONLINE_IDLE");
             ledIndicator.setState("idle");
             break;
         }

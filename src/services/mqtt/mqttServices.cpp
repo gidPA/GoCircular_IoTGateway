@@ -1,6 +1,9 @@
 
 #include <Arduino.h>
 #include <PubSubClient.h>
+
+#include "mqttServices.h"
+
 #include "services/wifi/WiFiServices.h"
 #include "services/transaction/TransactionState.h"
 #include "services/config/rvmConfig.h"
@@ -26,11 +29,17 @@ int mqttInit(
 
     mqttClient.setServer(hostname, port);
 
+    char lastWillMessageBuffer[150];
+    snprintf(lastWillMessageBuffer, sizeof(lastWillMessageBuffer), 
+        "{\"rvmid\": \"%s\", \"status\":\"%s\"}"
+        , rvmConfig.id, "OFFLINE"
+    );
+
     int i;
     Serial.print("[MQTT Init] Connecting.");
     for (i = 0; i < 3; i++)
     {
-        if (mqttClient.connect(id, username, jwt))
+        if (mqttClient.connect(id, username, jwt, rvmConfig.rvmStatusTopic, 1, true, lastWillMessageBuffer))
         {
             Serial.println("\n[MQTT Init] Connected to MQTT Broker");
 
@@ -41,6 +50,7 @@ int mqttInit(
             // mqttClient.subscribe("gocircular/rvm/4002/input/transaction/memberMode");
             Serial.println("[MQTT Init]Succesfully subscribed");
 
+            publishMQTTStatus("ONLINE_IDLE");
             mqttClient.setCallback(callback);
 
             return 1;
@@ -54,6 +64,15 @@ int mqttInit(
 
     Serial.println("\n[MQTT Init] Failed to connect to MQTT Broker");
     return 0;
+}
+
+bool publishMQTTStatus(const char* status){
+    char messageBuffer[150];
+    snprintf(messageBuffer, sizeof(messageBuffer), 
+        "{\"rvmid\":\"%s\", \"status\":\"%s\"}"
+        , rvmConfig.id, status
+    );
+    return mqttClient.publish(rvmConfig.rvmStatusTopic, messageBuffer, true);
 }
 
 void mqttCallback(char *topic, byte *payload, unsigned int length)
