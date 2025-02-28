@@ -18,8 +18,8 @@ extern WiFiCred wifiCred;
 
 struct RVMCred
 {
-    const char *rvmid = "4001";
-    const char *secretKey = "12345";
+    const char *rvmid = "4012";
+    const char *secretKey = "123453";
     // const char *rootCert = rootCACertificate;
     char jwt[255];
 

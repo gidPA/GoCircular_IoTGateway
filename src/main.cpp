@@ -232,23 +232,6 @@ void handleIncomingMessage() {
     }
 }
 
-// void createPendingRecyclableJson(byte recyclableData[], char messageBuffer[], uint64_t timestampId) {
-//     Serial.println("Creating JSON....");
-//     JsonDocument doc;
-
-//     JsonArray data = doc["enteredItem"].to<JsonArray>();
-//     data.add(recyclableData[0]);
-//     data.add(recyclableData[1]);
-
-//     char output[100];
-
-//     doc.shrinkToFit();  // optional
-
-//     serializeJson(doc, output);
-
-//     memcpy(messageBuffer, output, 100);
-// }
-
 void createRecyclableJson(uint64_t recyclableData[], char messageBuffer[]) {
     Serial.println("Creating JSON....");
     JsonDocument doc;

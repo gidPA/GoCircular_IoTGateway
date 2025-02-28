@@ -30,7 +30,7 @@ struct RVMConfig {
         const int maxSize = 255;
 
     public:
-        const char* id = "4001";
+        const char* id = "4012";
         const char* httpAddress = "http://192.168.0.178";
         const char* mqttAddress = "192.168.0.178";
         int mqttPort = 1883;
